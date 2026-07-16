@@ -1,9 +1,10 @@
 package fr.diginamic.main;
 
 import fr.diginamic.entites.Adresse;
+import fr.diginamic.entites.AssuranceVie;
 import fr.diginamic.entites.Banque;
 import fr.diginamic.entites.ClientBanque;
-import fr.diginamic.entites.Compte;
+import fr.diginamic.entites.LivretA;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
@@ -20,41 +21,44 @@ public class ConnexionJpa {
 
     public static void main(String[] args) {
         EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("pu_banque");
-        EntityManager em = entityManagerFactory.createEntityManager();
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
 
-        EntityTransaction transaction = em.getTransaction();
+        EntityTransaction transaction = entityManager.getTransaction();
         transaction.begin();
 
-        // Création d'une banque
-        Banque banque = new Banque("Crédit Agricole");
-        em.persist(banque);
+        // Banque nécessaire pour rattacher les comptes
+        Banque banque = new Banque("BNP Paribas");
+        entityManager.persist(banque);
 
-        // Création de 2 clients
-        ClientBanque client1 = new ClientBanque("Dupont", "Marie", LocalDate.of(1985, 3, 12));
-        Adresse adresse1 = new Adresse(12, "Rue des Lilas", 34000, "Montpellier");
-        client1.setAdresse(adresse1);
-        ClientBanque client2 = new ClientBanque("Martin", "Julien", LocalDate.of(1990, 7, 22));
-        Adresse adresse2 = new Adresse(5, "Avenue Foch", 75116, "Paris");
-        client2.setAdresse(adresse2);
-        em.persist(client1);
-        em.persist(client2);
+        // Client avec adresse
+        ClientBanque client = new ClientBanque("Lefevre", "Sophie", LocalDate.of(1978, 11, 5));
+        Adresse adresse = new Adresse(8, "Rue Victor Hugo", 69002, "Lyon");
+        client.setAdresse(adresse);
+        entityManager.persist(client);
 
-        // Création d'un compte associé à la banque et aux 2 clients
-        Compte compte = new Compte("FR76-0001", 1500.0);
-        compte.setBanque(banque);
+        // Compte Assurance Vie
+        AssuranceVie assuranceVie = new AssuranceVie("AV-1001", 5000.0, LocalDate.of(2035, 12, 31), 2.5);
+        assuranceVie.setBanque(banque);
+        List<ClientBanque> clientsAV = new ArrayList<>();
+        clientsAV.add(client);
+        assuranceVie.setClients(clientsAV);
+        entityManager.persist(assuranceVie);
 
-        List<ClientBanque> clients = new ArrayList<>();
-        clients.add(client1);
-        clients.add(client2);
-        compte.setClients(clients);
-
-        em.persist(compte);
+        // Compte Livret A
+        LivretA livretA = new LivretA("LA-2002", 3000.0, 3.0);
+        livretA.setBanque(banque);
+        List<ClientBanque> clientsLA = new ArrayList<>();
+        clientsLA.add(client);
+        livretA.setClients(clientsLA);
+        entityManager.persist(livretA);
 
         transaction.commit();
 
-        System.out.println("Insertion terminée : " + compte);
+        System.out.println("Client créé : " + client);
+        System.out.println("Compte Assurance Vie : " + assuranceVie);
+        System.out.println("Compte Livret A : " + livretA);
 
-        em.close();
+        entityManager.close();
         entityManagerFactory.close();
     }
 }
