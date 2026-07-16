@@ -1,64 +1,43 @@
 package fr.diginamic.main;
 
-import fr.diginamic.entites.Adresse;
-import fr.diginamic.entites.AssuranceVie;
-import fr.diginamic.entites.Banque;
-import fr.diginamic.entites.ClientBanque;
-import fr.diginamic.entites.LivretA;
+import fr.diginamic.entites.Compte;
+import fr.diginamic.entites.Virement;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.Persistence;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.time.LocalDateTime;
 
 /**
- * Point d'entrée pour tester la connexion JPA et les insertions.
+ * Point d'entrée pour tester l'insertion d'opérations de type virement.
  */
 public class ConnexionJpa {
 
     public static void main(String[] args) {
         EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("pu_banque");
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        EntityManager em = entityManagerFactory.createEntityManager();
 
-        EntityTransaction transaction = entityManager.getTransaction();
+        EntityTransaction transaction = em.getTransaction();
         transaction.begin();
 
-        // Banque nécessaire pour rattacher les comptes
-        Banque banque = new Banque("BNP Paribas");
-        entityManager.persist(banque);
+        // Récupération du compte existant (id 2 = Assurance Vie)
+        Compte compte = em.find(Compte.class, 2);
 
-        // Client avec adresse
-        ClientBanque client = new ClientBanque("Lefevre", "Sophie", LocalDate.of(1978, 11, 5));
-        Adresse adresse = new Adresse(8, "Rue Victor Hugo", 69002, "Lyon");
-        client.setAdresse(adresse);
-        entityManager.persist(client);
+        Virement virement1 = new Virement(LocalDateTime.now(), 250.0, "Virement loyer", "Régie Immobilière SARL");
+        virement1.setCompte(compte);
+        em.persist(virement1);
 
-        // Compte Assurance Vie
-        AssuranceVie assuranceVie = new AssuranceVie("AV-1001", 5000.0, LocalDate.of(2035, 12, 31), 2.5);
-        assuranceVie.setBanque(banque);
-        List<ClientBanque> clientsAV = new ArrayList<>();
-        clientsAV.add(client);
-        assuranceVie.setClients(clientsAV);
-        entityManager.persist(assuranceVie);
-
-        // Compte Livret A
-        LivretA livretA = new LivretA("LA-2002", 3000.0, 3.0);
-        livretA.setBanque(banque);
-        List<ClientBanque> clientsLA = new ArrayList<>();
-        clientsLA.add(client);
-        livretA.setClients(clientsLA);
-        entityManager.persist(livretA);
+        Virement virement2 = new Virement(LocalDateTime.now(), 80.0, "Remboursement ami", "Julien Martin");
+        virement2.setCompte(compte);
+        em.persist(virement2);
 
         transaction.commit();
 
-        System.out.println("Client créé : " + client);
-        System.out.println("Compte Assurance Vie : " + assuranceVie);
-        System.out.println("Compte Livret A : " + livretA);
+        System.out.println("Virement 1 : " + virement1);
+        System.out.println("Virement 2 : " + virement2);
 
-        entityManager.close();
+        em.close();
         entityManagerFactory.close();
     }
 }
